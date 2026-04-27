@@ -85,7 +85,7 @@ async def get_books_name(book_name: str, db: AsyncSession = Depends(get_db)):
     book = result.scalar_one_or_none()
     return book
 
-@app.get("/book/search_book")
+@app.get("book/search_book")
 async def search_book(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Book).where(Book.price>=35))
     books = result.scalars().all()

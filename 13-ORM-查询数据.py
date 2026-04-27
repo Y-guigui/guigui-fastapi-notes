@@ -67,26 +67,11 @@ async def get_db():
         finally:
             await session.close() # 关闭会话
 
-@app.get("/book/get_book_id/{book_id}")
-async def get_books_id(book_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Book).where(Book.id == book_id))
-    book = result.scalar_one_or_none()
+# 查询所有
+@app.get("/book/books")
+async def get_books_two(db: AsyncSession = Depends(get_db)):
+    # result = await db.execute(select(Book)) # 查询---->返回ORM对象
+    # book = result.scalars().all() # 获取所有
+    # book = result.scalars().first() # 获取第一条
+    book = await db.get(Book, 2) # 获取第二条
     return book
-
-@app.get("/book/get_book_price/{book_price}")
-async def get_books_price(book_price: float, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Book).where(Book.price == book_price))
-    book = result.scalars().all()
-    return book
-
-@app.get("/book/get_book_name/{book_name}")
-async def get_books_name(book_name: str, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Book).where(Book.bookname == book_name))
-    book = result.scalar_one_or_none()
-    return book
-
-@app.get("/book/search_book")
-async def search_book(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Book).where(Book.price>=35))
-    books = result.scalars().all()
-    return books
