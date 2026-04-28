@@ -3,10 +3,9 @@ from datetime import datetime
 from sqlalchemy import DateTime, func, Integer, String, Float, select
 
 print("🔥 正在加载 MAIN.PY！")
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -68,19 +67,19 @@ async def get_db():
         finally:
             await session.close() # 关闭会话
 
-@app.delete("/book/delete_book/{book_id}")
-async def delete_book(
-        book_id: int,
+
+
+@app.get("/book/get_books")
+async def get_book_list(
+        page: int = 1,
+        page_size: int = 8,
         db: AsyncSession = Depends(get_db)
 ):
-    # 查询
-    book = await db.get(Book, book_id)
-    if book is None:
-        raise HTTPException(
-            status_code=404,
-            detail="BOOK IS NONE"
-        )
-    # 提交
-    await db.delete(book)
-    await db.commit()
-    return {"msg":"删除成功！"}
+    # （ 页码-1 ） * 每页数量
+    skip = (page - 1) * page_size
+    limit = page_size
+    stmt= select(Book).offset(skip).limit(limit)
+    result = await db.execute(stmt)
+    books = result.scalars().all()
+    return books
+

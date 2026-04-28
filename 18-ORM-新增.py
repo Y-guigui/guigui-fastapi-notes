@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import DateTime, func, Integer, String, Float, select
 
 print("🔥 正在加载 MAIN.PY！")
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from pydantic import BaseModel
@@ -68,19 +68,29 @@ async def get_db():
         finally:
             await session.close() # 关闭会话
 
-@app.delete("/book/delete_book/{book_id}")
-async def delete_book(
-        book_id: int,
+
+# 添加图书信息
+# 用户输入  --  参数 -- 请求体
+class BookBase(BaseModel):
+    id: int
+    bookname: str
+    author: str
+    price: float
+    publisher: str
+
+
+@app.post("/book/add_book")
+async def add_book(
+        # 数据接收
+        book: BookBase,
         db: AsyncSession = Depends(get_db)
 ):
-    # 查询
-    book = await db.get(Book, book_id)
-    if book is None:
-        raise HTTPException(
-            status_code=404,
-            detail="BOOK IS NONE"
-        )
-    # 提交
-    await db.delete(book)
+    # ORM对象--add--commit
+
+    # book.__dict__把接收到的数据变成一个字典--{"id": 1, "bookname": "三体", ...}
+    # **解包，把字典里的键值对拆开，作为参数塞进 Book() 里。
+    # book_obj = Book(**book.__dict__)
+    book_obj = Book(**book.model_dump())
+    db.add(book_obj)
     await db.commit()
-    return {"msg":"删除成功！"}
+    return book_obj

@@ -68,9 +68,20 @@ async def get_db():
         finally:
             await session.close() # 关闭会话
 
-@app.delete("/book/delete_book/{book_id}")
-async def delete_book(
+
+# 添加图书信息
+# 用户输入  --  参数 -- 请求体
+class BookUpdate(BaseModel):
+    bookname: str
+    author: str
+    price: float
+    publisher: str
+
+
+@app.put("/book/update_book/{book_id}")
+async def update_book(
         book_id: int,
+        data: BookUpdate,
         db: AsyncSession = Depends(get_db)
 ):
     # 查询
@@ -80,7 +91,11 @@ async def delete_book(
             status_code=404,
             detail="BOOK IS NONE"
         )
+    # 修改属性
+    book.bookname = data.bookname
+    book.author = data.author
+    book.price = data.price
+    book.publisher = data.publisher
     # 提交
-    await db.delete(book)
     await db.commit()
-    return {"msg":"删除成功！"}
+    return book
